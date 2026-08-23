@@ -1,38 +1,60 @@
-import java.util.HashMap;
-import java.util.Map;
-
-public class Solution {
+class Solution {
     public int maxNumberOfFamilies(int n, int[][] reservedSeats) {
-        Map<Integer, Integer> graph = new HashMap<>();
-        
-        for (int[] seat : reservedSeats) {
-            int row = seat[0];
-            int col = seat[1];
-            if (col >= 2 && col <= 9) {
-                int mask = graph.getOrDefault(row, 0);
-                mask |= (1 << (col - 2));
-                graph.put(row, mask);
+
+        int l = 0, r = 0, prev = 0;
+        int sz = reservedSeats.length;
+
+        Arrays.sort(reservedSeats, (a, b) -> a[0] - b[0]);
+
+        boolean[] isReserved = new boolean[11];
+        int ans = 0;
+
+        while (r < sz) {
+
+            // Count rows with no reservations
+            ans += 2 * (reservedSeats[r][0] - prev - 1);
+
+            prev = reservedSeats[r][0];
+
+            // Mark all reserved seats in the current row
+            while (r < sz && reservedSeats[l][0] == reservedSeats[r][0]) {
+                isReserved[reservedSeats[r][1]] = true;
+                r++;
+            }
+
+            // Check the three possible groups
+            boolean twoToFive = check(isReserved, 2, 5);
+            boolean fourToSeven = check(isReserved, 4, 7);
+            boolean sixToNine = check(isReserved, 6, 9);
+
+            // Two non-overlapping groups
+            if (twoToFive && sixToNine) {
+                ans += 2;
+            }
+            // At least one group is available
+            else if (twoToFive || fourToSeven || sixToNine) {
+                ans++;
+            }
+
+            l = r;
+
+            // Reset for the next row
+            Arrays.fill(isReserved, false);
+        }
+
+        // Remaining rows are completely empty
+        ans += 2 * (n - prev);
+
+        return ans;
+    }
+
+    public boolean check(boolean[] b, int l, int r) {
+        for (int i = l; i <= r; i++) {
+            if (b[i]) {
+                return false;
             }
         }
-        
-        // Base case: Assume 2 families per empty row
-        int maxFamilies = 2 * n; 
-        
-        for (int mask : graph.values()) {
-            boolean left = (mask & 15) == 0;    // Seats 2,3,4,5 (bits 0-3)
-            boolean right = (mask & 240) == 0;  // Seats 6,7,8,9 (bits 4-7)
-            boolean mid = (mask & 60) == 0;     // Seats 4,5,6,7 (bits 2-5)
-            
-            maxFamilies -= 2; // Deduct default 2 families
-            
-            if (left && right) {
-                maxFamilies += 2;
-            } else if (left || right || mid) {
-                maxFamilies += 1;
-            }
-        }
-        
-        return maxFamilies;
+        return true;
     }
 }
 
