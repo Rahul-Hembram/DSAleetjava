@@ -1,28 +1,40 @@
 class Solution {
     static char posInfinite(String s, int pos) {
-        StringBuilder A = new StringBuilder(s);
-        int n = 1;
-        int N = A.length();
+        long[] len = new long[100];
+        int[] sep = new int[100];
 
-        while (N < pos) {
-            A.reverse();
-            String str = A.toString();
-            A.reverse();
+        len[0] = s.length();
+        int level = 0;
 
-            for (int i = 0; i < n; i++) {
-                A.append("$");
-            }
-
-            A.append(str);
-            n++;
-            N = A.length();
+        // Calculate lengths only
+        while (len[level] < pos) {
+            level++;
+            sep[level] = level;
+            len[level] = 2 * len[level - 1] + level;
         }
 
-        int p = N - pos;
-        String f = A.reverse().toString();
-        char c = f.charAt(p);
+        long p = pos;
 
-        return c;
+        // Trace the position backwards
+        while (level > 0) {
+            long oldLen = len[level - 1];
+            long separators = sep[level];
+
+            if (p <= oldLen) {
+                // Position is in the original part
+            } 
+            else if (p <= oldLen + separators) {
+                return '$';
+            } 
+            else {
+                // Position is in the reversed part
+                p = oldLen - (p - oldLen - separators) + 1;
+            }
+
+            level--;
+        }
+
+        return s.charAt((int) p - 1);
     }
 }
 
